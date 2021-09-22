@@ -1,0 +1,509 @@
+var activeSheet            = SpreadsheetApp.getActive().getSheetByName("##DONT ALTER!!## DCFM Programmes");
+var imageColumnID1         = 38;
+var imageColumnID2         = 47;
+var imageColumnID3         = 48;
+var imageColumnID4         = 49;
+var delayAmountColumnID    = 51;
+var startRow               = 2; 
+var dispatchedColumnID     = 35;
+var showTimeColumnID       = 4;
+var twitterFieldColumnID   = 28;
+var facebookFieldColumnID  = 29;
+var instagramFieldColumnID = 30;
+var productionNotesColumnID= 54;
+var warningText            = "<p style=color:red>";
+var newshowinfoEmailSentIDColumnID = 50;//this field determines if socialmedia are emailed about a new show having been added.
+
+//Dates in google sheets are handled strangely so we'll use reversedDateField to create a day and month for the email
+var reversedDateField     = 36;
+var emailAddress          = 'socialmedia@dublincityfm.ie';
+var date                  = "";
+var subjectLine           = "";
+var htmlBody_             = "";
+var sBR                   = "<br>----------------------------------------------------<br>";
+var senderEmail           = "";
+
+      
+      //If adding or modifying any show info make sure to follow the convention - HH.MM SHOWNAME -email- membersemailaddress
+      
+      //Ensure there's a space between the time and the show name and ensure the spelling here is EXACTLY 
+      //the same as the spelling in the Show Name drop-down box.
+      var showInfo = [      
+                            /****MONDAY****/                                                     
+                            "10:00 Good Morning Dublin -email- goodmorning@dublincityfm.ie",
+                            "11:00 Making a Difference -email- makingadifference@dublincityfm.ie",
+                            "11:30 Lonesome Highway -email- lonesomehighway@dublincityfm.ie",
+                            "12:30 Aftering -email- aftering@dublincityfm.ie",
+                            "13:00 LGBTQ Life -email- lgbtq@dublincityfm.ie",
+                            "13:30 Brazilian Coffee Time -email- brcoffeetime@dublincityfm.ie",
+                            "14:00 Afternoon Irish -email- afternoonirish@dublincityfm.ie",
+                            "15:00 Who Does That? -email- whodoesthat@dublincityfm.ie",
+                            "15:30 Rudai Mar Sin -email- rudaimarsin@dublincityfm.ie",
+                            "19:00 Absolute Game -email- sport@dublincityfm.ie",                            
+                            "20:00 Bookbound -email- bookbound@dublincityfm.ie",
+                            "20:30 Russian Show -email- russianshow@dublincityfm.ie",
+                            "21:00 Trad at Heart -email- tradatheart@dublincityfm.ie",
+                            "22:00 Ear to the Globe -email- eartotheglobe@dublincityfm.ie",
+                            "23:59 After Midnight -email- aftermidnight@dublincityfm.ie",     
+
+                            /****TUESDAY****/
+                            "10:00 Good Morning Dublin -email- goodmorning@dublincityfm.ie",
+                            "11:00 Good For You -email- good4u@dublincityfm.ie",
+                            "11:30 Classical Choices -email- classicalchoices@dublincityfm.ie",
+                            "12:30 Mental Fitness -email- mentalfitness@dublincityfm.ie",
+                            "13:00 Trinity Talks FM -email- jamesgoldsbury@gmail.com",
+                            "13:30 Mediascope -email- mediascope@dublincityfm.ie",
+                            "14:00 Our Musical Islands -email- ourmusicalislands@dublincityfm.ie	 	",
+                            "15:00 Dublin Edition -email- dublinedition@dublincityfm.ie",
+                            "19:00 Inside Sport -email- sport@dublincityfm.ie",
+                            "19:30 Centre Stage -email- centrestage@dublincityfm.ie",
+                            "20:00 Astronomy Show -email- astronomy@dublincityfm.ie",
+                            "20:30 Hello China -email- hellochina@dublincityfm.ie",
+                            "21:00 Sin E -email- sine@dublincityfm.ie",
+                            "23:00 Threads -email- threads@dublincityfm.ie",
+                            "23:59 Global Transmission -email- globaltransmission@dublincityfm.ie	 	",
+
+                            /****WEDNESDAY****/
+                            "10:00 Good Morning Dublin -email- goodmorning@dublincityfm.ie",
+                            "11:00 City Week -email- councilmatters@dublincityfm.ie",
+                            "11:30 Midweek Music Misc -email- midweekmusic@dublincityfm.ie",
+                            "12:30 Talk Travel -email- talktravel@dublincityfm.ie",
+                            "13:00 Crime Matters -email- crimematters@dublincityfm.ie",                            
+                            "14:00 Jukebox Sounds -email- jukeboxsounds@dublincityfm.ie",
+                            "15:00 Sound & Vision -email- jamesgoldsbury@gmail.com",
+                            "19:00 GAA Sports Desk -email- gaasportsdesk@dublincityfm.ie",
+                            "20:00 Artbeat -email- artbeatshow@dublincityfm.ie",
+                            "20:30 Raidio Na Life -email- jamesgoldsbury@gmail.com",
+                            "21:00 Music in Mouth -email- musicinmouth@dublincityfm.ie",
+                            "22:00 Roots of American Music -email- rootsofamericanmusic@dublincityfm.ie",
+                            "23:00 Songs to Learn & Sing -email- songstolearnandsing@dublincityfm.ie",
+                            "23:59 The Night Train -email- nighttrain@dublincityfm.ie",
+
+                            /****THURSDAY****/
+                            "10:00 Good Morning Dublin -email- goodmorning@dublincityfm.ie",
+                            "11:00 Irish Business Show -email- irishbusinessshow@dublincityfm.ie",
+                            "11:30 That's All Folk -email- thatsallfolk@dublincityfm.ie",
+                            "12:30 Viva Vox -email- vivavox@dublincityfm.ie",
+                            "13:00 Out & About -email- outandabout@dublincityfm.ie",
+                            "13:30 Scout About -email- scoutabout@dublincityfm.ie",
+                            "14:00 Sounds of the Cinema -email- soundsofthecinema@dublincityfm.ie",
+                            "15:00 On The Road -email- ontheroad@dublincityfm.ie",
+                            "15:30 All About Books -email- allaboutbooks@dublincityfm.ie",
+                            "19:00 The Line Out -email- jamesgoldsbury@gmail.com",
+                            "19:30 This Be The Verse -email- verse@dublincityfm.ie",
+                            "20:00 That's Life -email- thatslife@dublincityfm.ie",
+                            "20:30 Polish Show -email- polishshow@dublincityfm.ie",
+                            "21:00 Alternative Thursday -email- alternativethursday@dublincityfm.ie",
+                            "22:00 Soul Kitchen -email- soulkitchen@dublincityfm.ie",
+                            "23:00 Roots Musings -email- rootsmusings@dublincityfm.ie",
+                            "23:59 Woodsongs -email- jamesgoldsbury@gmail.com",
+
+                            /****FRIDAY****/
+                            "10:00 Good Morning Dublin -email- goodmorning@dublincityfm.ie",
+                            "11:00 Mind Matters -email- mindmatters@dublincityfm.ie",
+                            "11:30 Classic Country Gold -email- classiccountrygold@dublincityfm.ie",
+                            "12:30 You & Your Business -email- yourbusiness@dublincityfm.ie",
+                            "13:00 The Persuaders -email- persuaders@dublincityfm.ie",
+                            "13:30 Upstarts -email- upstarts@dublincityfm.ie",
+                            "14:00 Magical Melodies -email- magicalmelodies@dublincityfm.ie",
+                            "15:00 Maritime Ireland -email- jamesgoldsbury@gmail.com",
+                            "15:30 Inspirational Stories -email- inspirational@dublincityfm.ie",
+                            "19:00 Friday Sports Desk -email- jamesgoldsbury@gmail.com",
+                            "19:30 Conscious Living -email- consciousliving@dublincityfm.ie",
+                            "20:00 Looking Back -email- lookingback@dublincityfm.ie",
+                            "20:30 Europe Today -email- europetoday@dublincityfm.ie",
+                            "21:00 Don't Get It Twisted -email- twisted@dublincityfm.ie",
+                            "22:00 The Moshpit -email- themoshpit@dublincityfm.ie",
+                            "23:00 American Music Show -email- americanmusicshow@dublincityfm.ie",
+                            "23:59 Rockabilly Jukebox -email- billylee@dublincityfm.ie",
+
+                            /****SATURDAY****/
+                            "08:00 Kids Power Hour -email- kidspowerhour@dublincityfm.ie",
+                            "09:00 The Green Room -email- greenroom@dublincityfm.ie",
+                            "09:30 Community Chats -email- communitychats@dublincityfm.ie", 
+                            "10:00 All Time Greats -email- atg@dublincityfm.ie",
+                            "12:00 It's All in the Song -email- allinthesong@dublincityfm.ie",
+                            "13:00 Saturday Brunch -email- saturdaybrunch@dublincityfm.ie",
+                            "14:00 The Movie Show -email- movieshow@dublincityfm.ie",
+                            "15:00 Little Steven's Underground Garage -email- jamesgoldsbury@gmail.com",                            
+                            "17:00 Jazzmine -email- jazzmine@dublincityfm.ie",
+                            "18:00 Soul Seeker -email- soulseeker@dublincityfm.ie",
+                            "19:00 Shakin' Street -email- shakinstreet@dublincityfm.ie",
+                            "21:00 Classic Rock -email- classicrock@dublincityfm.ie",
+                            "22:00 Positive Vibrations -email- vibrations@dublincityfm.ie",                            
+                            "23:59 After Hours -email- afterhours@dublincityfm.ie",
+
+                            /****SUNDAY****/
+                            "08:00 Sunday Breakfast -email- sundaybreakfast@dublincityfm.ie",
+                            "10:00 Sunday Edition -email- sundayedition@dublincityfm.ie",
+                            "11:00 Missing Links -email- missinglinks@dublincityfm.ie",
+                            "12:00 Startup Nation -email- startupnation@dublincityfm.ie",
+                            "13:00 Nostalgia -email- nostalgia@dublincityfm.ie",
+                            "15:00 On the Ball -email- sport@dublincityfm.ie",
+                            "17:30 Scoreboard -email- sport@dublincityfm.ie",
+                            "18:00 Elvis Memories -email- elvismemories@dublincityfm.ie",
+                            "19:00 Showband Show -email- showbandshow@dublincityfm.ie",
+                            "20:00 Ceoil and Craic -email- ceoilaguscraic@dublincityfm.ie",
+                            "21:00 Night Moves -email- nightmoves@dublincityfm.ie",
+                            "22:00 The Blues Train -email- bluestrain@dublincityfm.ie",
+                            "23:59 Future Past -email- futurepast@dublincityfm.ie"];
+
+
+/************************************************* */
+function getFilename(str)
+{         
+          var imageURL_      = str.toString();   
+          var index          = imageURL_.lastIndexOf('/');
+          var imageFileName  = imageURL_.substring(index+1);
+          return imageFileName;         
+}
+/************************************************* */
+
+
+
+/************************************************* */
+function checkImageDimensions(blob)
+{
+    //var images = SpreadsheetApp.getActive().getSheetByName("##DONT ALTER!!## DCFM Programmes").getImages();  
+    //for (var i = 0; i < images.length; i++) {  Logger.log(images[i].getWidth()); }
+}
+/************************************************* */
+
+
+
+/************************************************* */
+function _verifyShowInfo() 
+{
+    
+    var data = SpreadsheetApp.getActiveSheet().getDataRange().getValues();//dataRange.getValues();       
+    var totalColumnCount = activeSheet.getLastColumn();
+
+
+    for (var i = 0; i < data.length; ++i) 
+    {     
+
+        var row                     = data[i];
+        var isDispatched            = row[dispatchedColumnID];
+        var newshowinfoEmailSent    = row[newshowinfoEmailSentIDColumnID];
+        
+        //var productionNotes = "";
+        //productionNotes         = row[productionNotesColumnID];
+        //var processThisEntry        = false;
+        //if(productionNotes.indexOf("1usman1") > 0) processThisEntry 
+        
+
+        if ( isDispatched =='pending' && newshowinfoEmailSent =='unsent' )
+        { 
+         
+          // Any other images attached don't affect whether the post goes out or not.
+          var imageURL1       = row[imageColumnID1];             
+          var imageFileName1  = getFilename(imageURL1);
+          var googleLogoBlob1 = UrlFetchApp.fetch(imageURL1).getBlob();
+
+          htmlBody_           = "";
+          subjectLine         = "";
+          var spacesInFileName = false;
+          var andInFileName = false;
+          
+         
+          //**************************************************************************** */
+          //Image2, Image3 and Image4  are not used by the zap so we don't care if they have spaces in the filename.          
+          var imageURL2       = row[imageColumnID2];
+          var imageFileName2  = getFilename(imageURL2);
+          var googleLogoBlob2;
+          var imageURL3       = row[imageColumnID3];
+          var imageFileName3  = getFilename(imageURL3);
+          var googleLogoBlob3;
+          var imageURL4       = row[imageColumnID4];
+          var imageFileName4  = getFilename(imageURL4);
+          var googleLogoBlob4;          
+          //**************************************************************************** */
+
+          var isFileTypeMP4 = false;
+          if(imageFileName1.indexOf(".mp4") > 0) isFileTypeMP4=true;   
+                
+
+          //Only the first image is used by the Zap to create the social-media post.
+          // so, if it's invalid then that the post won't go out. 
+          if(imageFileName1.indexOf(" ") > 0 || isFileTypeMP4==true || imageFileName1.indexOf("&") > 0 )
+          {    
+              subjectLine = "### WARNING "+row[1]+" will not be sent to social-media ###";  
+
+              if(imageFileName1.indexOf(" ") > 0) 
+              {
+                  htmlBody_+=warningText+ "### The image filename contains spaces. Please change the filename and upload the details again.###</p>";
+                  spacesInFileName = true;
+              }
+
+              if(imageFileName1.indexOf("&") > 0) 
+              {
+                  htmlBody_+=warningText+ "### The image filename contains a &. Please change the filename and upload the details again. ###</p>";
+                  andInFileName = true;
+              }
+
+              if(isFileTypeMP4==true)
+                htmlBody_ += warningText+ "### MP4 file attached can't be dispatched. ###</p>"              
+
+              activeSheet.getRange(i+1, dispatchedColumnID+1 ).setValue('cant be dispatched');  
+              
+              //Set the row color to red if it can't be dispatched
+              changeRowColor("red",i,totalColumnCount);              
+
+          }
+          else
+          {
+              subjectLine = "New show pending - "+ row[1] ; 
+              changeRowColor("orange",i,totalColumnCount);     
+          }
+
+
+          htmlBody_ +="<b>"+imageFileName1+"</b><br><img src='cid:googleLogo1' width=20% height=20% >";                 
+          htmlBody_ += sBR;
+          
+
+          if (imageURL2 != "" )
+          {                
+            googleLogoBlob2 = UrlFetchApp.fetch(imageURL2).getBlob();
+            htmlBody_ +=  "<b>"+imageFileName2+"</b><br><img src='cid:googleLogo2' width=20% height=20% >";
+            htmlBody_ += sBR;
+          }
+
+
+          if (imageURL3 != "" )
+          {                
+            googleLogoBlob3 = UrlFetchApp.fetch(imageURL3).getBlob();
+            htmlBody_ +=  "<b>"+imageFileName3+"</b><br><img src='cid:googleLogo3' width=20% height=20% >";
+            htmlBody_ += sBR;
+          }
+
+
+          if (imageURL4 != "" )
+          {                
+            googleLogoBlob4 = UrlFetchApp.fetch(imageURL4).getBlob();
+            htmlBody_ +=  "<b>"+imageFileName4+"</b><br><img src='cid:googleLogo4' width=20% height=20% >";
+            htmlBody_ += sBR;
+          }
+
+          
+          twitterField   = row[twitterFieldColumnID];
+          facebookField  = row[facebookFieldColumnID];
+          instagramField = row[instagramFieldColumnID];
+          htmlBody_ += "<br><b>TWITTER DESCRIPTION</b><br>";              
+          htmlBody_ += twitterField;
+          htmlBody_ += sBR;
+          htmlBody_ += "<br><b>FACEBOOK DESCRIPTION</b><br>";
+          htmlBody_ += facebookField
+          htmlBody_ += sBR;
+          htmlBody_ += "<br><b>INSTAGRAM DESCRIPTION</b><br>";
+          htmlBody_ += instagramField;
+          htmlBody_ += sBR;
+
+
+          if(imageURL1 != "" && imageURL2 == "" && imageURL3 == "" && imageURL4 == "")                      
+            MailApp.sendEmail({to: emailAddress,subject: subjectLine,htmlBody: htmlBody_, inlineImages: {googleLogo1: googleLogoBlob1}});
+          
+
+          if(imageURL1 != "" && imageURL2 != "" && imageURL3 == "" && imageURL4 == "")
+            MailApp.sendEmail({to: emailAddress,subject:subjectLine,htmlBody:htmlBody_,inlineImages:{googleLogo1: googleLogoBlob1, googleLogo2:googleLogoBlob2}});
+          
+
+          if(imageURL1 != "" && imageURL2 != "" && imageURL3 != "" && imageURL4 == "")
+            MailApp.sendEmail({to: emailAddress,subject: subjectLine,htmlBody: htmlBody_, inlineImages: {googleLogo1: googleLogoBlob1, googleLogo2: googleLogoBlob2, googleLogo3: googleLogoBlob3}});
+          
+
+          if(imageURL1 != "" && imageURL2 != "" && imageURL3 != "" && imageURL4 != "")
+            MailApp.sendEmail({to: emailAddress,subject: subjectLine,htmlBody: htmlBody_, inlineImages: {googleLogo1: googleLogoBlob1, googleLogo2: googleLogoBlob2, googleLogo3: googleLogoBlob3, googleLogo4: googleLogoBlob4}});
+          
+
+            //Set the value to 'newshowinfo_email_sent' for this show so email is not sent again to socialmedia@dublincityfm.ie
+            activeSheet.getRange(i+1, newshowinfoEmailSentIDColumnID+1 ).setValue('newshowinfo_email_sent');  
+
+
+            /*** This is here to handle the 11am shows differently with a 1hr delay instead of 2hr */                        
+            if(row[1] == "Making a Difference" || 
+            row[1] == "City Week" || 
+            row[1] == "Irish Business Show" || 
+            row[1] == "Mind Matters" || 
+            row[1] == "Good For You" ||
+            row[1] == "Lonesome Highway" ||
+            row[1] == "Classical Choices"  ||
+            row[1] == "Midweek Music Misc"  ||
+            row[1] == "That's All Folk"  ||
+            row[1] == "Classic Country Gold"  )
+                activeSheet.getRange(i+1, delayAmountColumnID+1 ).setValue('-1h');
+            else                        
+                activeSheet.getRange(i+1, delayAmountColumnID+1 ).setValue('-2h'); 
+
+            //Dispatch GMD immediately when the Zap hits the top of the hour
+            if(row[1] == "Good Morning Dublin") 
+              activeSheet.getRange(i+1, delayAmountColumnID+1 ).setValue('');
+            /************************************************ */
+
+
+            //Add the show-time
+            var showtime = getShowTime(row[1]);            
+            activeSheet.getRange(i+1, showTimeColumnID ).setValue(showtime);  
+
+            //checkTimeDifference(row);
+
+            //send thank you to presenter
+            senderEmail = sendThankyouEmail(row[1], spacesInFileName, imageFileName1);      
+          
+            SpreadsheetApp.flush();
+            Utilities.sleep(2000);
+        }        
+  }
+
+}
+/************************************************* */
+
+
+
+/************************************************* */
+function getShowTime(showName)
+{
+  
+      var seconds = ":00";      
+      var showTime = "12:00:00";//set this as the default time in case nothing is found
+     
+      for(var i=0;i<=showInfo.length-1;i++)
+      {
+          var info = showInfo[i];            
+          if(showInfo[i].indexOf(showName)>0)          
+          {  
+              showTime=showInfo[i].substring(0,5)+seconds ;              
+              break;
+          }          
+      }     
+     return showTime;
+
+}
+/************************************************* */
+
+
+
+
+/************************************************* */
+function changeRowColor(color, i, totalColumnCount)
+{
+     
+      for(var x = 1; x < totalColumnCount; x++) 
+      {              
+          activeSheet.getRange(i+1,x).setBackground(color);
+      }
+  
+}
+/************************************************* */
+
+
+
+
+/************************************************* */
+function sendThankyouEmail(showName, spacesInFileName, imageFileName1)
+{
+ 
+      senderEmail = "";
+
+      for(var i=0;i<=showInfo.length-1;i++)
+      {
+          var info = showInfo[i];            
+          if(showInfo[i].indexOf(showName)>0)          
+          {  
+              var index = showInfo[i].indexOf(" -email- ");
+              senderEmail = showInfo[i].substring(index+9,showInfo[i].length);                         
+              break;
+          }          
+      }     
+
+
+      var thankYouMessageSubject = "Thank you for submitting your info for "+showName;
+      var thankYouMessageBody = "";
+      if(spacesInFileName == true) 
+      {
+        thankYouMessageBody += "There are spaces in your image filename:- "+imageFileName1 +"\n\n";
+        thankYouMessageBody += "When you next submit can you please ensure there are no spaces.\n\n"
+        thankYouMessageBody += "If you have any questions about your show submissions please send them to training@dublincityfm.ie\n\n";
+        thankYouMessageBody += "Thank you.";
+      }
+      
+      MailApp.sendEmail(senderEmail, thankYouMessageSubject,  thankYouMessageBody  );  
+      
+
+}
+/************************************************* */
+
+
+
+
+/*********************NOT USED**************************** */
+function checkSocialMediaFields(row)
+{
+    var twitter   = row[twitterFieldColumnID];
+    var facebook  = row[facebookFieldColumnID];
+    var instagram = row[instagramFieldColumnID];
+    var atcount = 0;
+    var maxInstagram = 100;//only 100 '@' symbols allowed in instagram by Zapier
+
+    for(var count = 0 ; count < instagram.length ; count++)  
+    {
+        if(instagram[count] == "@") atcount++;        
+        if(atcount > maxInstagram) return false;       
+    }
+
+    return true;
+
+
+}/************************************************* */
+
+
+
+/*
+var SORT_COLUMN_INDEX = 3;
+var ASCENDING = false;
+var NUMBER_OF_HEADER_ROWS = 1;
+var activeSheet; 
+
+function autoSort(sheet) {
+ 
+  
+  range = sheet.getDataRange();
+  
+  if (NUMBER_OF_HEADER_ROWS > 0) {   range = range.offset(NUMBER_OF_HEADER_ROWS, 0);  }
+
+  SORT_ORDER = [
+  {column: 3, ascending: true},  // 3 = column number, sorting by descending order
+  {column: 4, ascending: true}, // 1 = column number, sort by ascending order 
+  ];
+
+  range.sort( SORT_ORDER);
+  
+}
+
+
+function onEdit(event) {
+
+  //activeSheet = SpreadsheetApp.getActiveSheet();
+  
+  activeSheet = SpreadsheetApp.getActive().getSheetByName("DCFM Programme Info");
+  range = activeSheet.getDataRange();
+   if (NUMBER_OF_HEADER_ROWS > 0) {   range = range.offset(NUMBER_OF_HEADER_ROWS, 0);  }
+  
+   // autoSort(activeSheet);
+  SORT_ORDER = [  {column: 3, ascending: true},  {column: 4, ascending: true},  ];
+  range.sort( SORT_ORDER);
+  
+}
+
+function xtriggeredEvent()
+{
+    
+  activeSheet = SpreadsheetApp.getActive().getSheetByName("test DCFM Programme Info");
+  range = activeSheet.getDataRange();
+   if (NUMBER_OF_HEADER_ROWS > 0) {   range = range.offset(NUMBER_OF_HEADER_ROWS, 0);  }
+  
+   // autoSort(activeSheet);
+  SORT_ORDER = [  {column: 3, ascending: true},  {column: 4, ascending: true},  ];
+  range.sort( SORT_ORDER);
+}
+
+*/
